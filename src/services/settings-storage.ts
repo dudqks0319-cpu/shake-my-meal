@@ -33,7 +33,13 @@ export function shouldShowOnboarding(value: string | null) {
 }
 
 export async function loadSettings() {
-  const raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+  let raw: string | null = null;
+
+  try {
+    raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
 
   if (!raw) {
     return DEFAULT_SETTINGS;
@@ -50,13 +56,27 @@ export async function loadSettings() {
 }
 
 export async function saveSettings(settings: UserSettings) {
-  await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  try {
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function readOnboardingState() {
-  return AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+  try {
+    return await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 }
 
 export async function completeOnboarding() {
-  await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'done');
+  try {
+    await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'done');
+    return true;
+  } catch {
+    return false;
+  }
 }

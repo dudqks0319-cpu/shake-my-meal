@@ -10,6 +10,8 @@ type PrimaryButtonProps = {
   disabled?: boolean;
   variant?: 'solid' | 'soft' | 'ghost';
   icon?: ReactNode;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 export function PrimaryButton({
@@ -19,12 +21,17 @@ export function PrimaryButton({
   disabled = false,
   variant = 'solid',
   icon,
+  accessibilityLabel,
+  accessibilityHint,
 }: PrimaryButtonProps) {
   const isDisabled = loading || disabled;
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => [

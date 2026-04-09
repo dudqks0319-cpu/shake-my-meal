@@ -2,27 +2,28 @@ import { useFocusEffect, router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { APP_CONFIG } from '@/src/config/app-config';
 import { HistoryList } from '@/src/components/history-list';
 import { IntensityMeter } from '@/src/components/intensity-meter';
+import { LoadingCard } from '@/src/components/loading-card';
+import { NoticeCard } from '@/src/components/notice-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenShell } from '@/src/components/screen-shell';
 import { menuDataset } from '@/src/data/menu-dataset';
-import { recommendMenu, getCurrentTimeTag } from '@/src/domain/menu-recommender';
+import { getCurrentTimeTag, recommendMenu } from '@/src/domain/menu-recommender';
 import { getHomeHeroState } from '@/src/domain/ui-copy';
 import { canUseShake } from '@/src/domain/usage-policy';
+import { useHomeData } from '@/src/hooks/use-home-data';
 import { useShakeSession } from '@/src/hooks/use-shake-session';
 import { triggerSelectionHaptic } from '@/src/services/feedback';
-import { loadHistory, pushHistory } from '@/src/services/history-storage';
-import { loadSettings, readOnboardingState, shouldShowOnboarding } from '@/src/services/settings-storage';
+import { readOnboardingState, shouldShowOnboarding } from '@/src/services/settings-storage';
 import { theme } from '@/src/styles/theme';
 
 export function HomeScreen() {
   const shake = useShakeSession();
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [history, setHistory] = useState(awaitableArray);
-  const [settings, setSettings] = useState(awaitableSettings);
-  const [dailyCount, setDailyCount] = useState(0);
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const { settings, history, dailyCount, isLoading, errorMessage, recordHistory, refresh } = useHomeData();
 
   const usageState = useMemo(
     () => canUseShake({ premiumUnlocked: settings.premiumUnlocked, dailyCount }),
@@ -40,6 +41,11 @@ export function HomeScreen() {
     dinner: '저녁',
     'late-night': '야식',
   }[timeContext];
+  const usageLabel =
+    APP_CONFIG.freeUsageLimitPerDay === null
+      ? `오늘 사용 ${dailyCount}회`
+      : `오늘 사용 ${Math.min(dailyCount, APP_CONFIG.freeUsageLimitPerDay)} / ${APP_CONFIG.freeUsageLimitPerDay}`;
+
   const heroState = useMemo(
     () =>
       getHomeHeroState({
@@ -63,29 +69,14 @@ export function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      let active = true;
-
-      Promise.all([loadSettings(), loadHistory()]).then(([nextSettings, nextHistory]) => {
-        if (!active) {
-          return;
-        }
-
-        setSettings(nextSettings);
-        setHistory(nextHistory);
-        const todayKey = new Date().toDateString();
-        const todayCount = nextHistory.filter((item) => new Date(item.createdAt).toDateString() === todayKey).length;
-        setDailyCount(todayCount);
-      });
-
-      return () => {
-        active = false;
-      };
-    }, [])
+      void refresh();
+      return undefined;
+    }, [refresh])
   );
 
   useEffect(() => {
     if (!usageState.allowed) {
-      setLimitMessage('무료 버전은 하루 10번까지 흔들 수 있어요.');
+      setLimitMessage('오늘 무료 사용 한도에 도달했어요.');
       shake.resetSession();
       return;
     }
@@ -116,19 +107,14 @@ export function HomeScreen() {
         currentTimeTag: timeContext,
       });
 
-      const historyItem = {
+      void recordHistory({
         id: `${Date.now()}`,
         menuId: menu.id,
         menuName: menu.name,
         emoji: menu.emoji,
         intensityPercent: shake.peakIntensity,
         createdAt: new Date().toISOString(),
-        mode: 'single' as const,
-      };
-
-      pushHistory(historyItem).then((nextHistory) => {
-        setHistory(nextHistory);
-        setDailyCount((current) => current + 1);
+        mode: 'single',
       });
 
       router.push({
@@ -150,7 +136,7 @@ export function HomeScreen() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdown, settings, shake.peakIntensity, shake, settings.hapticsEnabled, timeContext]);
+  }, [countdown, recordHistory, settings, shake, timeContext]);
 
   const handleRestart = useCallback(() => {
     setCountdown(null);
@@ -161,18 +147,25 @@ export function HomeScreen() {
 
   return (
     <ScreenShell>
+      {errorMessage ? <NoticeCard title="불러오기 안내" body={errorMessage} tone="error" /> : null}
+
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Text style={styles.brand}>🍚 흔들밥</Text>
+            <Text accessibilityRole="header" style={styles.brand}>🍚 흔들밥</Text>
             <Text style={styles.subtitle}>오늘 뭐 먹을지 5초 안에 끝내기</Text>
           </View>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/settings')} style={styles.settingsPill}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="설정 화면으로 이동"
+            onPress={() => router.push('/settings')}
+            style={styles.settingsPill}
+          >
             <Text style={styles.settingsPillText}>⚙ 설정</Text>
           </Pressable>
         </View>
         <View style={styles.contextRow}>
-          <ContextChip label={`오늘 사용 ${Math.min(dailyCount, 10)} / 10`} tone="warm" />
+          <ContextChip label={usageLabel} tone="warm" />
           <ContextChip label={`${partyLabel} · ${timeLabel}`} tone="soft" />
         </View>
       </View>
@@ -181,23 +174,32 @@ export function HomeScreen() {
         <View style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>{heroState.badge}</Text>
         </View>
-        <Text style={styles.heroEmoji}>{heroState.emoji}</Text>
-        <Text style={styles.heroTitle}>{heroState.title}</Text>
+        <Text accessibilityElementsHidden style={styles.heroEmoji}>{heroState.emoji}</Text>
+        <Text accessibilityRole="header" style={styles.heroTitle}>{heroState.title}</Text>
         <Text style={styles.heroBody}>{heroState.body}</Text>
         <IntensityMeter value={shake.liveIntensity} />
       </View>
 
+      {isLoading ? (
+        <LoadingCard title="설정과 기록을 불러오는 중" body="최근 추천 흐름과 개인 설정을 준비하고 있어요." />
+      ) : null}
+
       {!usageState.allowed ? (
-        <PrimaryButton label="오늘 제한 확인됨" variant="ghost" disabled />
+        <PrimaryButton label="오늘 제한 확인됨" variant="ghost" disabled accessibilityLabel="오늘 사용 제한 도달" />
       ) : null}
 
       {shake.status === 'ended' && !shake.readyForCountdown ? (
-        <PrimaryButton label="조금 더 세게, 다시!" onPress={handleRestart} variant="soft" />
+        <PrimaryButton
+          label="조금 더 세게, 다시!"
+          onPress={handleRestart}
+          variant="soft"
+          accessibilityHint="흔들기 측정을 다시 시작합니다."
+        />
       ) : null}
 
       <View style={styles.quickActions}>
-        <QuickLink emoji="📜" label="다시 측정" onPress={handleRestart} />
-        <QuickLink emoji="⚔️" label="배틀" onPress={() => router.push('/battle')} />
+        <QuickLink emoji="📜" label="다시 측정" onPress={handleRestart} accessibilityLabel="다시 측정하기" />
+        <QuickLink emoji="⚔️" label="배틀" onPress={() => router.push('/battle')} accessibilityLabel="배틀 화면으로 이동" />
       </View>
 
       <View style={styles.section}>
@@ -209,28 +211,19 @@ export function HomeScreen() {
   );
 }
 
-const awaitableArray = [] as Awaited<ReturnType<typeof loadHistory>>;
-const awaitableSettings = {
-  excludedMenuIds: [],
-  enabledCategories: ['korean', 'chinese', 'japanese', 'western', 'snack', 'asian', 'dessert'],
-  partySize: 'solo',
-  autoTimeDetection: true,
-  soundEnabled: true,
-  hapticsEnabled: true,
-  premiumUnlocked: false,
-} as Awaited<ReturnType<typeof loadSettings>>;
-
 function QuickLink({
   emoji,
   label,
   onPress,
+  accessibilityLabel,
 }: {
   emoji: string;
   label: string;
   onPress: () => void;
+  accessibilityLabel: string;
 }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.quickLink}>
+    <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} onPress={onPress} style={styles.quickLink}>
       <Text style={styles.quickEmoji}>{emoji}</Text>
       <Text style={styles.quickLabel}>{label}</Text>
     </Pressable>

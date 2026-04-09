@@ -10,7 +10,13 @@ export function appendHistory(existing: ShakeHistoryItem[], nextItem: ShakeHisto
 }
 
 export async function loadHistory() {
-  const raw = await AsyncStorage.getItem(HISTORY_STORAGE_KEY);
+  let raw: string | null = null;
+
+  try {
+    raw = await AsyncStorage.getItem(HISTORY_STORAGE_KEY);
+  } catch {
+    return [] as ShakeHistoryItem[];
+  }
 
   if (!raw) {
     return [] as ShakeHistoryItem[];
@@ -24,12 +30,22 @@ export async function loadHistory() {
 }
 
 export async function saveHistory(items: ShakeHistoryItem[]) {
-  await AsyncStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items));
+  try {
+    await AsyncStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function pushHistory(item: ShakeHistoryItem) {
   const current = await loadHistory();
   const next = appendHistory(current, item);
-  await saveHistory(next);
+  const saved = await saveHistory(next);
+
+  if (!saved) {
+    throw new Error('history-save-failed');
+  }
+
   return next;
 }

@@ -27,6 +27,11 @@
 - 메뉴 추천과 설정은 기기 내부에 저장
 - 센서는 흔들기 강도 측정에만 사용
 
+## Privacy Policy URL
+
+- 후보 URL: `https://dudqks0319-cpu.github.io/shake-my-meal/privacy-policy.html`
+- 파일: `privacy-policy.html`
+
 ## Version 1 Scope
 
 - 오프라인 메뉴 추천

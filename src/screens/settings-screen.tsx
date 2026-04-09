@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
+import { LoadingCard } from '@/src/components/loading-card';
+import { NoticeCard } from '@/src/components/notice-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenShell } from '@/src/components/screen-shell';
 import { menuDataset } from '@/src/data/menu-dataset';
@@ -23,14 +25,30 @@ const partyModes: { label: string; value: PartySize }[] = [
 export function SettingsScreen() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    loadSettings().then(setSettings);
+    loadSettings()
+      .then(setSettings)
+      .catch(() => {
+        setErrorMessage('설정을 불러오지 못했어요. 기본값으로 계속 진행합니다.');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
-  const updateSettings = (nextSettings: typeof settings) => {
+  const updateSettings = async (nextSettings: typeof settings) => {
     setSettings(nextSettings);
-    void saveSettings(nextSettings);
+    const saved = await saveSettings(nextSettings);
+
+    if (!saved) {
+      setErrorMessage('설정 저장에 실패했어요. 다시 시도해 주세요.');
+      return;
+    }
+
+    setErrorMessage(null);
   };
 
   const excludedMenus = menuDataset.filter((menu) => settings.excludedMenuIds.includes(menu.id));
@@ -41,11 +59,16 @@ export function SettingsScreen() {
 
   return (
     <ScreenShell contentContainerStyle={styles.container}>
+      {errorMessage ? <NoticeCard title="설정 안내" body={errorMessage} tone="error" /> : null}
       <Text style={styles.title}>설정</Text>
       <View style={styles.summaryRow}>
         <SummaryChip label={`제외 메뉴 ${excludedMenus.length}개`} />
         <SummaryChip label={`카테고리 ${categoryCount}개 활성`} />
       </View>
+
+      {isLoading ? (
+        <LoadingCard title="설정을 불러오는 중" body="취향과 필터를 준비하고 있어요." />
+      ) : null}
 
       <Section title="NO 리스트">
         <Text style={styles.helperText}>오늘 절대 먹기 싫은 메뉴를 골라서 추천에서 제외해요.</Text>
@@ -55,6 +78,7 @@ export function SettingsScreen() {
           placeholder="메뉴 이름 검색"
           placeholderTextColor={theme.colors.inkSoft}
           style={styles.input}
+          accessibilityLabel="메뉴 이름 검색"
         />
         <View style={styles.chips}>
           {filteredMenus.map((menu) => {
@@ -65,12 +89,13 @@ export function SettingsScreen() {
                 key={menu.id}
                 label={`${menu.emoji} ${menu.name}`}
                 variant={selected ? 'solid' : 'ghost'}
-                onPress={() =>
-                  updateSettings({
+                onPress={() => {
+                  void updateSettings({
                     ...settings,
                     excludedMenuIds: toggleExcludedMenuId(settings.excludedMenuIds, menu.id),
-                  })
-                }
+                  });
+                }}
+                accessibilityLabel={`${menu.name} 제외 메뉴 토글`}
               />
             );
           })}
@@ -84,12 +109,13 @@ export function SettingsScreen() {
                   key={menu.id}
                   label={`${menu.emoji} ${menu.name}`}
                   variant="soft"
-                  onPress={() =>
-                    updateSettings({
+                  onPress={() => {
+                    void updateSettings({
                       ...settings,
                       excludedMenuIds: toggleExcludedMenuId(settings.excludedMenuIds, menu.id),
-                    })
-                  }
+                    });
+                  }}
+                  accessibilityLabel={`${menu.name} 제외 해제`}
                 />
               ))}
             </View>
@@ -109,12 +135,13 @@ export function SettingsScreen() {
                 key={category}
                 label={categoryLabels[category]}
                 variant={enabled ? 'solid' : 'ghost'}
-                onPress={() =>
-                  updateSettings({
+                onPress={() => {
+                  void updateSettings({
                     ...settings,
                     enabledCategories: toggleCategory(settings.enabledCategories, category),
-                  })
-                }
+                  });
+                }}
+                accessibilityLabel={`${categoryLabels[category]} 카테고리 토글`}
               />
             );
           })}
@@ -128,7 +155,10 @@ export function SettingsScreen() {
               key={mode.value}
               label={mode.label}
               variant={settings.partySize === mode.value ? 'solid' : 'ghost'}
-              onPress={() => updateSettings({ ...settings, partySize: mode.value })}
+              onPress={() => {
+                void updateSettings({ ...settings, partySize: mode.value });
+              }}
+              accessibilityLabel={`${mode.label} 인원수 선택`}
             />
           ))}
         </View>
@@ -138,12 +168,16 @@ export function SettingsScreen() {
         <SwitchRow
           label="시간대 자동 감지"
           value={settings.autoTimeDetection}
-          onValueChange={(value) => updateSettings({ ...settings, autoTimeDetection: value })}
+          onValueChange={(value) => {
+            void updateSettings({ ...settings, autoTimeDetection: value });
+          }}
         />
         <SwitchRow
           label="진동"
           value={settings.hapticsEnabled}
-          onValueChange={(value) => updateSettings({ ...settings, hapticsEnabled: value })}
+          onValueChange={(value) => {
+            void updateSettings({ ...settings, hapticsEnabled: value });
+          }}
         />
         <Text style={styles.helperText}>효과음은 v1 출시 범위에서 제외하고, 진동 피드백에 집중합니다.</Text>
       </Section>
@@ -172,7 +206,7 @@ function SwitchRow({
   return (
     <View style={styles.switchRow}>
       <Text style={styles.switchLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onValueChange} />
+      <Switch accessibilityLabel={label} value={value} onValueChange={onValueChange} />
     </View>
   );
 }

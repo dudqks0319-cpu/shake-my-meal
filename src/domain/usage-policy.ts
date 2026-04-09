@@ -1,9 +1,13 @@
+import { APP_CONFIG } from '@/src/config/app-config';
+
 export function canUseShake({
   premiumUnlocked,
   dailyCount,
+  dailyLimit = APP_CONFIG.freeUsageLimitPerDay,
 }: {
   premiumUnlocked: boolean;
   dailyCount: number;
+  dailyLimit?: number | null;
 }) {
   if (premiumUnlocked) {
     return {
@@ -12,7 +16,7 @@ export function canUseShake({
     } as const;
   }
 
-  if (dailyCount >= 10) {
+  if (dailyLimit !== null && dailyCount >= dailyLimit) {
     return {
       allowed: false,
       reason: 'daily-limit',

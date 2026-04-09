@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { NoticeCard } from '@/src/components/notice-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenShell } from '@/src/components/screen-shell';
 import { completeOnboarding } from '@/src/services/settings-storage';
@@ -15,6 +16,7 @@ const slides = [
 
 export function OnboardingScreen() {
   const [index, setIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const slide = slides[index];
   const isLast = index === slides.length - 1;
 
@@ -24,12 +26,19 @@ export function OnboardingScreen() {
       return;
     }
 
-    await completeOnboarding();
+    const saved = await completeOnboarding();
+
+    if (!saved) {
+      setErrorMessage('온보딩 저장에 실패했어요. 다시 눌러주세요.');
+      return;
+    }
+
     router.replace('/');
   };
 
   return (
     <ScreenShell scroll={false} contentContainerStyle={styles.container}>
+      {errorMessage ? <NoticeCard title="저장 실패" body={errorMessage} tone="error" /> : null}
       <View style={styles.hero}>
         <Text style={styles.emoji}>{slide.emoji}</Text>
         <Text style={styles.title}>{slide.title}</Text>
@@ -40,7 +49,11 @@ export function OnboardingScreen() {
           <View key={item.title} style={[styles.dot, itemIndex === index && styles.dotActive]} />
         ))}
       </View>
-      <PrimaryButton label={isLast ? '배고파, 시작하자!' : '다음'} onPress={handleNext} />
+      <PrimaryButton
+        label={isLast ? '배고파, 시작하자!' : '다음'}
+        accessibilityHint="온보딩 다음 단계로 이동합니다."
+        onPress={handleNext}
+      />
     </ScreenShell>
   );
 }

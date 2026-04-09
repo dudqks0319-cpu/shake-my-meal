@@ -1,10 +1,10 @@
-const MAX_REFERENCE_G = 4.2;
+import { SHAKE_CONFIG } from '@/src/config/shake-config';
 
 export function getVectorMagnitude(x: number, y: number, z: number) {
   return Math.sqrt(x * x + y * y + z * z);
 }
 
-export function normalizeAccelerationToPercent(value: number, maxReferenceG = MAX_REFERENCE_G) {
+export function normalizeAccelerationToPercent(value: number, maxReferenceG: number = SHAKE_CONFIG.maxReferenceG) {
   if (!Number.isFinite(value) || value <= 0) {
     return 0;
   }
@@ -24,5 +24,5 @@ export function smoothSamples(samples: number[], nextValue: number, maxSamples =
 }
 
 export function getCountdownStartState(peakIntensity: number) {
-  return peakIntensity >= 15;
+  return peakIntensity >= SHAKE_CONFIG.countdownStartThresholdPercent;
 }

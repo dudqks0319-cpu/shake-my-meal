@@ -18,7 +18,10 @@
 - [x] local history
 - [x] same-screen battle mode
 - [x] system share
-- [ ] menu dataset expansion toward launch target
+- [x] image share card fallback path
+- [x] loading and error states for key settings/history/result flows
+- [x] privacy policy asset drafted
+- [x] menu dataset expansion toward launch target
 - [ ] final UX tuning on real devices
 
 ## App Store / TestFlight
@@ -32,9 +35,10 @@
 - [x] EAS production build created and queued
 - [ ] App Store build finished on EAS
 - [ ] TestFlight upload completed
+- [ ] Privacy Policy URL published live
 
 ## Current Blocking Items
 
 1. EAS production build is queued on Free tier and has not finished yet.
 2. Release smoke test succeeded at simulator launch level, but real device shake tuning still needs validation.
-3. Menu data volume improved to 100 entries, but original aspiration was still higher.
+3. Privacy policy HTML exists, but GitHub Pages or another public host must serve it at a live URL.

@@ -2,13 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Accelerometer, type AccelerometerMeasurement } from 'expo-sensors';
 
+import { SHAKE_CONFIG } from '@/src/config/shake-config';
 import { getCountdownStartState, getVectorMagnitude, normalizeAccelerationToPercent, smoothSamples } from '@/src/domain/shake-math';
 
 type ShakeStatus = 'idle' | 'active' | 'ended' | 'unsupported';
-
-const UPDATE_INTERVAL = 50;
-const ACTIVE_THRESHOLD = 12;
-const STOP_AFTER_MS = 1200;
 
 export function useShakeSession() {
   const [status, setStatus] = useState<ShakeStatus>('idle');
@@ -35,7 +32,7 @@ export function useShakeSession() {
 
       setLiveIntensity(intensity);
 
-      if (intensity >= ACTIVE_THRESHOLD) {
+      if (intensity >= SHAKE_CONFIG.activeThresholdPercent) {
         lastMovementAtRef.current = Date.now();
         peakRef.current = Math.max(peakRef.current, intensity);
         setPeakIntensity(peakRef.current);
@@ -43,8 +40,8 @@ export function useShakeSession() {
 
       if (
         peakRef.current > 0 &&
-        intensity < ACTIVE_THRESHOLD &&
-        Date.now() - lastMovementAtRef.current > STOP_AFTER_MS
+        intensity < SHAKE_CONFIG.activeThresholdPercent &&
+        Date.now() - lastMovementAtRef.current > SHAKE_CONFIG.stopAfterMs
       ) {
         stopListening();
         setStatus('ended');
@@ -70,7 +67,7 @@ export function useShakeSession() {
     setPeakIntensity(0);
     setLiveIntensity(0);
     setStatus('active');
-    Accelerometer.setUpdateInterval(UPDATE_INTERVAL);
+    Accelerometer.setUpdateInterval(SHAKE_CONFIG.updateIntervalMs);
     subscriptionRef.current = Accelerometer.addListener(handleMeasurement);
     return true;
   }, [handleMeasurement, stopListening]);
