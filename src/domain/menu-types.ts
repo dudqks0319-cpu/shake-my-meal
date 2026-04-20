@@ -11,6 +11,7 @@ export type IntensityBand = 'light' | 'medium' | 'heavy';
 export type PriceTier = 'budget' | 'standard' | 'premium';
 export type PartySize = 'solo' | 'duo' | 'group';
 export type TimeTag = 'breakfast' | 'lunch' | 'dinner' | 'late-night';
+export type MealIntent = 'light' | 'full' | 'treat';
 
 export type MenuItem = {
   id: string;
@@ -58,4 +59,10 @@ export const priceTierLabels: Record<PriceTier, string> = {
   budget: '~7천원',
   standard: '7천~1.5만원',
   premium: '1.5만원+',
+};
+
+export const mealIntentLabels: Record<MealIntent, string> = {
+  light: '가볍게 먹기',
+  full: '든든하게 먹기',
+  treat: '오늘은 사치',
 };

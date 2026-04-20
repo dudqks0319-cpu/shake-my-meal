@@ -109,6 +109,18 @@ export function buildRecommendationReason({
   return `${intensityLabel} ${partyLabel}, ${timeLabel} 메뉴가 골라졌어요.`;
 }
 
+export function buildIntentRecommendationReason({
+  intentLabel,
+  partyLabel,
+  timeLabel,
+}: {
+  intentLabel: string;
+  partyLabel: string;
+  timeLabel: string;
+}) {
+  return `${intentLabel} 모드에서 ${partyLabel} 기준, ${timeLabel}에 어울리는 메뉴를 랜덤으로 골랐어요.`;
+}
+
 export function getBattleStageState(stage: 'intro' | 'player1' | 'player1-ready' | 'player2' | 'complete') {
   switch (stage) {
     case 'intro':

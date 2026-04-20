@@ -11,6 +11,10 @@ describe('shake math', () => {
     expect(normalizeAccelerationToPercent(30, 20)).toBe(100);
   });
 
+  it('keeps a mild shake from jumping into the mid range', () => {
+    expect(normalizeAccelerationToPercent(2)).toBeLessThan(35);
+  });
+
   it('starts countdown after a valid peak', () => {
     expect(getCountdownStartState(42)).toBe(true);
   });

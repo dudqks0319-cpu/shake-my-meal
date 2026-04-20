@@ -10,7 +10,8 @@ import { NoticeCard } from '@/src/components/notice-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenShell } from '@/src/components/screen-shell';
 import { menuDataset } from '@/src/data/menu-dataset';
-import { getCurrentTimeTag, recommendMenu } from '@/src/domain/menu-recommender';
+import { getCurrentTimeTag, recommendMenuByIntent } from '@/src/domain/menu-recommender';
+import { mealIntentLabels, type MealIntent } from '@/src/domain/menu-types';
 import { getHomeHeroState } from '@/src/domain/ui-copy';
 import { canUseShake } from '@/src/domain/usage-policy';
 import { useHomeData } from '@/src/hooks/use-home-data';
@@ -23,6 +24,7 @@ export function HomeScreen() {
   const shake = useShakeSession();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const [selectedIntent, setSelectedIntent] = useState<MealIntent>('full');
   const { settings, history, dailyCount, isLoading, errorMessage, recordHistory, refresh } = useHomeData();
 
   const usageState = useMemo(
@@ -58,6 +60,11 @@ export function HomeScreen() {
       }),
     [countdown, limitMessage, shake.liveIntensity, shake.readyForCountdown, shake.status, shake.warning]
   );
+  const intentBody = {
+    light: '오늘은 가볍게 한 끼만 챙기고 싶을 때',
+    full: '배는 든든하게, 만족감 있게 먹고 싶을 때',
+    treat: '오늘만큼은 가격 생각 덜 하고 기분 좋게 먹고 싶을 때',
+  }[selectedIntent];
 
   useEffect(() => {
     readOnboardingState().then((value) => {
@@ -100,8 +107,8 @@ export function HomeScreen() {
     }
 
     if (countdown === 0) {
-      const menu = recommendMenu({
-        intensityPercent: shake.peakIntensity,
+      const menu = recommendMenuByIntent({
+        intent: selectedIntent,
         menus: menuDataset,
         settings,
         currentTimeTag: timeContext,
@@ -123,6 +130,7 @@ export function HomeScreen() {
           menuId: menu.id,
           intensity: `${shake.peakIntensity}`,
           mode: 'single',
+          intent: selectedIntent,
         },
       });
       setCountdown(null);
@@ -136,7 +144,7 @@ export function HomeScreen() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdown, recordHistory, settings, shake, timeContext]);
+  }, [countdown, recordHistory, selectedIntent, settings, shake, timeContext]);
 
   const handleRestart = useCallback(() => {
     setCountdown(null);
@@ -177,7 +185,24 @@ export function HomeScreen() {
         <Text accessibilityElementsHidden style={styles.heroEmoji}>{heroState.emoji}</Text>
         <Text accessibilityRole="header" style={styles.heroTitle}>{heroState.title}</Text>
         <Text style={styles.heroBody}>{heroState.body}</Text>
-        <IntensityMeter value={shake.liveIntensity} />
+
+        <View style={styles.intentSection}>
+          <Text style={styles.intentLabel}>지금 기분을 먼저 골라주세요</Text>
+          <View style={styles.intentChips}>
+            {(Object.keys(mealIntentLabels) as MealIntent[]).map((intent) => (
+              <PrimaryButton
+                key={intent}
+                label={mealIntentLabels[intent]}
+                variant={selectedIntent === intent ? 'solid' : 'ghost'}
+                onPress={() => setSelectedIntent(intent)}
+                accessibilityLabel={`${mealIntentLabels[intent]} 모드 선택`}
+              />
+            ))}
+          </View>
+          <Text style={styles.intentHint}>{intentBody}</Text>
+        </View>
+
+        <IntensityMeter value={shake.liveIntensity} label="흔들기 연출" />
       </View>
 
       {isLoading ? (
@@ -338,6 +363,26 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.bodyLarge,
     textAlign: 'center',
     lineHeight: 25,
+  },
+  intentSection: {
+    width: '100%',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  intentLabel: {
+    color: theme.colors.ink,
+    fontSize: theme.fontSize.body,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  intentChips: {
+    gap: theme.spacing.sm,
+  },
+  intentHint: {
+    color: theme.colors.inkSoft,
+    fontSize: theme.fontSize.caption,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   quickActions: {
     flexDirection: 'row',

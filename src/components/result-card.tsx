@@ -6,18 +6,25 @@ import { theme } from '@/src/styles/theme';
 
 type ResultCardProps = {
   menu: MenuItem;
-  intensityPercent: number;
+  intensityPercent?: number;
   winnerLabel?: string;
+  leadingMeta?: {
+    label: string;
+    value: string;
+  };
 };
 
-export function ResultCard({ menu, intensityPercent, winnerLabel }: ResultCardProps) {
+export function ResultCard({ menu, intensityPercent, winnerLabel, leadingMeta }: ResultCardProps) {
   return (
     <View style={styles.card}>
       {winnerLabel ? <Text style={styles.badge}>{winnerLabel}</Text> : null}
       <Text style={styles.emoji}>{menu.emoji}</Text>
       <Text style={styles.name}>{menu.name}</Text>
       <View style={styles.metaGrid}>
-        <MetaItem label="흔들기 강도" value={`${Math.round(intensityPercent)}%`} />
+        <MetaItem
+          label={leadingMeta?.label ?? '흔들기 강도'}
+          value={leadingMeta?.value ?? `${Math.round(intensityPercent ?? 0)}%`}
+        />
         <MetaItem label="카테고리" value={categoryLabels[menu.category]} />
         <MetaItem label="예상 가격" value={priceTierLabels[menu.priceTier]} />
         <MetaItem label="칼로리" value={`~${menu.calories}kcal`} />

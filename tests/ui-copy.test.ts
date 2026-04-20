@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildRecommendationReason, getBattleStageState, getHomeHeroState } from '@/src/domain/ui-copy';
+import { buildIntentRecommendationReason, buildRecommendationReason, getBattleStageState, getHomeHeroState } from '@/src/domain/ui-copy';
 
 describe('ui copy helpers', () => {
   it('returns countdown copy when countdown is active', () => {
@@ -27,6 +27,18 @@ describe('ui copy helpers', () => {
     expect(text).toContain('세게 흔들어서');
     expect(text).toContain('2인 기준');
     expect(text).toContain('저녁');
+  });
+
+  it('builds a readable intent recommendation reason', () => {
+    const text = buildIntentRecommendationReason({
+      intentLabel: '든든하게 먹기',
+      partyLabel: '혼밥',
+      timeLabel: '점심',
+    });
+
+    expect(text).toContain('든든하게 먹기');
+    expect(text).toContain('혼밥');
+    expect(text).toContain('점심');
   });
 
   it('returns battle result copy on complete stage', () => {

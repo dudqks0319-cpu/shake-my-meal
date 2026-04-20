@@ -14,7 +14,8 @@ import { ScreenShell } from '@/src/components/screen-shell';
 import { ShareResultPoster } from '@/src/components/share-result-poster';
 import { menuDataset } from '@/src/data/menu-dataset';
 import { getCurrentTimeTag } from '@/src/domain/menu-recommender';
-import { buildRecommendationReason } from '@/src/domain/ui-copy';
+import { mealIntentLabels, type MealIntent } from '@/src/domain/menu-types';
+import { buildIntentRecommendationReason } from '@/src/domain/ui-copy';
 import { triggerResultHaptic } from '@/src/services/feedback';
 import { buildShareText } from '@/src/services/share-result';
 import { loadSettings } from '@/src/services/settings-storage';
@@ -25,6 +26,7 @@ export function ResultScreen() {
     menuId?: string;
     intensity?: string;
     winner?: string;
+    intent?: MealIntent;
   }>();
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [partySize, setPartySize] = useState<'solo' | 'duo' | 'group'>('solo');
@@ -39,15 +41,24 @@ export function ResultScreen() {
     [params.menuId]
   );
   const intensity = Number(params.intensity ?? 0);
+  const selectedIntent = (params.intent as MealIntent | undefined) ?? 'full';
   const timeTag = autoTimeDetection ? getCurrentTimeTag() : 'lunch';
   const reason = useMemo(
-    () =>
-      buildRecommendationReason({
-        intensityPercent: intensity,
-        partySize,
-        timeTag,
-      }),
-    [intensity, partySize, timeTag]
+    () => buildIntentRecommendationReason({
+      intentLabel: mealIntentLabels[selectedIntent],
+      partyLabel: {
+        solo: '혼밥',
+        duo: '2인',
+        group: '단체',
+      }[partySize],
+      timeLabel: {
+        breakfast: '아침',
+        lunch: '점심',
+        dinner: '저녁',
+        'late-night': '야식',
+      }[timeTag],
+    }),
+    [partySize, selectedIntent, timeTag]
   );
 
   useEffect(() => {
@@ -84,6 +95,7 @@ export function ResultScreen() {
             menuName: menu.name,
             intensityPercent: intensity,
             category: menu.category,
+            intent: selectedIntent,
           }),
           url: APP_CONFIG.githubRepoUrl,
         });
@@ -95,6 +107,7 @@ export function ResultScreen() {
           menuName: menu.name,
           intensityPercent: intensity,
           category: menu.category,
+          intent: selectedIntent,
         }),
         url: APP_CONFIG.githubRepoUrl,
       });
@@ -120,10 +133,17 @@ export function ResultScreen() {
       ) : null}
 
       <ViewShot ref={shareCardRef} options={{ format: 'png', quality: 1, result: 'tmpfile' }}>
-        <ShareResultPoster menu={menu} intensityPercent={intensity} partySize={partySize} timeTag={timeTag} />
+        <ShareResultPoster menu={menu} intensityPercent={intensity} partySize={partySize} timeTag={timeTag} intent={selectedIntent} />
       </ViewShot>
 
-      <ResultCard menu={menu} intensityPercent={intensity} winnerLabel={params.winner} />
+      <ResultCard
+        menu={menu}
+        winnerLabel={params.winner}
+        leadingMeta={{
+          label: '선택한 모드',
+          value: mealIntentLabels[selectedIntent],
+        }}
+      />
 
       <View style={styles.actions}>
         <PrimaryButton
