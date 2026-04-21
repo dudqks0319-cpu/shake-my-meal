@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
 import { Accelerometer, type AccelerometerMeasurement } from 'expo-sensors';
 
@@ -52,6 +53,13 @@ export function useShakeSession() {
 
   const startSession = useCallback(async () => {
     setWarning(null);
+
+    if (Platform.OS === 'web') {
+      setStatus('unsupported');
+      setWarning('웹 미리보기에서는 흔들기 센서를 사용할 수 없어요. 실제 기기에서 확인해 주세요.');
+      return false;
+    }
+
     const available = await Accelerometer.isAvailableAsync().catch(() => false);
 
     if (!available) {

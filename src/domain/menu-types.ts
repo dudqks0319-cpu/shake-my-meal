@@ -5,7 +5,16 @@ export type MenuCategory =
   | 'western'
   | 'snack'
   | 'asian'
-  | 'dessert';
+  | 'dessert'
+  | 'chicken'
+  | 'pizza'
+  | 'burger'
+  | 'cafe'
+  | 'night'
+  | 'healthy'
+  | 'soup'
+  | 'meat'
+  | 'seafood';
 
 export type IntensityBand = 'light' | 'medium' | 'heavy';
 export type PriceTier = 'budget' | 'standard' | 'premium';
@@ -57,6 +66,15 @@ export const categoryLabels: Record<MenuCategory, string> = {
   snack: '분식',
   asian: '아시안',
   dessert: '디저트',
+  chicken: '치킨',
+  pizza: '피자',
+  burger: '버거',
+  cafe: '카페',
+  night: '야식',
+  healthy: '건강식',
+  soup: '국물',
+  meat: '고기',
+  seafood: '해산물',
 };
 
 export const priceTierLabels: Record<PriceTier, string> = {

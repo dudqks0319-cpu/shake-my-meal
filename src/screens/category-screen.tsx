@@ -15,6 +15,15 @@ const categoryEmoji: Record<MenuCategory, string> = {
   snack: '🍢',
   asian: '🍜',
   dessert: '🍰',
+  chicken: '🍗',
+  pizza: '🍕',
+  burger: '🍔',
+  cafe: '☕',
+  night: '🌙',
+  healthy: '🥗',
+  soup: '🍲',
+  meat: '🥩',
+  seafood: '🦐',
 };
 
 export function CategoryScreen() {

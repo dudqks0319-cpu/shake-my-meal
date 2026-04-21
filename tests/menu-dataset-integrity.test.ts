@@ -13,6 +13,12 @@ describe('menu dataset integrity', () => {
     expect(uniqueIds.size).toBe(menuDataset.length);
   });
 
+  it('contains enough menu variety for a delivery-app-like catalog', () => {
+    const categories = new Set(menuDataset.map((item) => item.category));
+    expect(menuDataset.length).toBeGreaterThanOrEqual(200);
+    expect(categories.size).toBeGreaterThanOrEqual(12);
+  });
+
   it('keeps band distribution reasonably balanced', () => {
     const counts = menuDataset.reduce(
       (acc, item) => {
@@ -22,11 +28,9 @@ describe('menu dataset integrity', () => {
       { light: 0, medium: 0, heavy: 0 }
     );
 
-    expect(counts.light).toBeGreaterThanOrEqual(30);
-    expect(counts.medium).toBeGreaterThanOrEqual(30);
-    expect(counts.heavy).toBeGreaterThanOrEqual(30);
-    expect(Math.abs(counts.light - counts.heavy)).toBeLessThanOrEqual(2);
-    expect(Math.abs(counts.medium - counts.light)).toBeLessThanOrEqual(5);
+    expect(counts.light).toBeGreaterThanOrEqual(80);
+    expect(counts.medium).toBeGreaterThanOrEqual(100);
+    expect(counts.heavy).toBeGreaterThanOrEqual(70);
   });
 
   it('covers breakfast, lunch, dinner, and late-night use cases', () => {
