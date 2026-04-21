@@ -1,4 +1,6 @@
 import type { IntensityBand, MealIntent, MenuItem, TimeTag, UserSettings } from '@/src/domain/menu-types';
+import type { FilterSettings } from '@/src/services/filter-storage';
+import { getDerivedIngredientTags, getDerivedTasteTags } from '@/src/domain/menu-tags';
 
 function getIntensityBand(intensityPercent: number): IntensityBand {
   if (intensityPercent <= 30) {
@@ -38,6 +40,7 @@ type RecommendMenuByIntentInput = {
   menus: MenuItem[];
   settings: UserSettings;
   currentTimeTag: TimeTag;
+  filters?: FilterSettings;
   random?: () => number;
 };
 
@@ -50,19 +53,33 @@ function filterMenus({
   menus,
   settings,
   currentTimeTag,
+  filters,
 }: {
   menus: MenuItem[];
   settings: UserSettings;
   currentTimeTag: TimeTag;
+  filters?: FilterSettings;
 }) {
   const byCategory = menus.filter((menu) => settings.enabledCategories.includes(menu.category));
   const byExclusion = byCategory.filter((menu) => !settings.excludedMenuIds.includes(menu.id));
-  const byPartySize = byExclusion.filter((menu) => menu.servingTags.includes(settings.partySize));
+  const byPrice = filters
+    ? byExclusion.filter((menu) => filters.priceTiers.includes(menu.priceTier))
+    : byExclusion;
+  const byIngredient = filters
+    ? byPrice.filter((menu) => !getDerivedIngredientTags(menu).some((tag) => filters.excludedIngredients.includes(tag)))
+    : byPrice;
+  const byTaste = filters && filters.preferredTastes.length > 0
+    ? byIngredient.filter((menu) => getDerivedTasteTags(menu).some((tag) => filters.preferredTastes.includes(tag)))
+    : byIngredient;
+  const byPartySize = byTaste.filter((menu) => menu.servingTags.includes(settings.partySize));
   const byTime = byPartySize.filter((menu) => menu.timeTags.includes(currentTimeTag));
 
   return {
     byCategory,
     byExclusion,
+    byPrice,
+    byIngredient,
+    byTaste,
     byPartySize,
     byTime,
   };
@@ -104,6 +121,7 @@ export function recommendMenuByIntent({
   menus,
   settings,
   currentTimeTag,
+  filters,
   random = Math.random,
 }: RecommendMenuByIntentInput) {
   const prioritizedBands = intentBandPriority[intent];
@@ -114,6 +132,7 @@ export function recommendMenuByIntent({
       menus: byBand,
       settings,
       currentTimeTag,
+      filters,
     });
     const finalPool = [byTime, byPartySize, byExclusion, byCategory, byBand].find((pool) => pool.length > 0);
 
@@ -126,6 +145,7 @@ export function recommendMenuByIntent({
     menus,
     settings,
     currentTimeTag,
+    filters,
   });
   const finalPool = [fallbackPool.byTime, fallbackPool.byPartySize, fallbackPool.byExclusion, fallbackPool.byCategory, menus]
     .find((pool) => pool.length > 0);

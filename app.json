@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jyb1126.shakemymeal",
-      "buildNumber": "2",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMotionUsageDescription": "흔들밥은 폰 흔들기 강도를 측정해서 오늘의 메뉴를 추천합니다."

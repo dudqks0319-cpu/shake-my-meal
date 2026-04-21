@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
 
 import { LoadingCard } from '@/src/components/loading-card';
 import { NoticeCard } from '@/src/components/notice-card';
@@ -180,6 +181,11 @@ export function SettingsScreen() {
           }}
         />
         <Text style={styles.helperText}>효과음은 v1 출시 범위에서 제외하고, 진동 피드백에 집중합니다.</Text>
+      </Section>
+
+      <Section title="도움말">
+        <PrimaryButton label="필터 설정" variant="soft" onPress={() => router.push('/filters' as never)} />
+        <PrimaryButton label="흔들기 안내" variant="ghost" onPress={() => router.push('/guide' as never)} />
       </Section>
     </ScreenShell>
   );

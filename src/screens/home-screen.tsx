@@ -17,6 +17,7 @@ import { canUseShake } from '@/src/domain/usage-policy';
 import { useHomeData } from '@/src/hooks/use-home-data';
 import { useShakeSession } from '@/src/hooks/use-shake-session';
 import { triggerSelectionHaptic } from '@/src/services/feedback';
+import { loadFilterSettings } from '@/src/services/filter-storage';
 import { readOnboardingState, shouldShowOnboarding } from '@/src/services/settings-storage';
 import { theme } from '@/src/styles/theme';
 
@@ -107,11 +108,19 @@ export function HomeScreen() {
     }
 
     if (countdown === 0) {
+      let filters;
+
+      try {
+        filters = awaitableFilters;
+      } catch {
+        filters = undefined;
+      }
       const menu = recommendMenuByIntent({
         intent: selectedIntent,
         menus: menuDataset,
         settings,
         currentTimeTag: timeContext,
+        filters,
       });
 
       void recordHistory({
@@ -235,6 +244,11 @@ export function HomeScreen() {
     </ScreenShell>
   );
 }
+
+let awaitableFilters: Awaited<ReturnType<typeof loadFilterSettings>> | undefined;
+loadFilterSettings().then((filters) => {
+  awaitableFilters = filters;
+});
 
 function QuickLink({
   emoji,

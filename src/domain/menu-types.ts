@@ -12,6 +12,8 @@ export type PriceTier = 'budget' | 'standard' | 'premium';
 export type PartySize = 'solo' | 'duo' | 'group';
 export type TimeTag = 'breakfast' | 'lunch' | 'dinner' | 'late-night';
 export type MealIntent = 'light' | 'full' | 'treat';
+export type TasteTag = 'spicy' | 'savory' | 'clean' | 'sweet' | 'fresh' | 'greasy';
+export type IngredientTag = 'spicy-food' | 'cilantro' | 'seafood' | 'mushroom' | 'onion' | 'garlic' | 'pork' | 'beef';
 
 export type MenuItem = {
   id: string;
@@ -23,6 +25,8 @@ export type MenuItem = {
   calories: number;
   servingTags: PartySize[];
   timeTags: TimeTag[];
+  tasteTags?: TasteTag[];
+  ingredientTags?: IngredientTag[];
 };
 
 export type UserSettings = {
@@ -65,4 +69,24 @@ export const mealIntentLabels: Record<MealIntent, string> = {
   light: '가볍게 먹기',
   full: '든든하게 먹기',
   treat: '오늘은 사치',
+};
+
+export const tasteTagLabels: Record<TasteTag, string> = {
+  spicy: '매운맛',
+  savory: '고소한맛',
+  clean: '담백한맛',
+  sweet: '달콤한맛',
+  fresh: '상큼한맛',
+  greasy: '기름진맛',
+};
+
+export const ingredientTagLabels: Record<IngredientTag, string> = {
+  'spicy-food': '매운 음식',
+  cilantro: '고수',
+  seafood: '해산물',
+  mushroom: '버섯',
+  onion: '양파',
+  garlic: '마늘',
+  pork: '돼지고기',
+  beef: '소고기',
 };
