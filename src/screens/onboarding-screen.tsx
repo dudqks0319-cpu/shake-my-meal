@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { NoticeCard } from '@/src/components/notice-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenShell } from '@/src/components/screen-shell';
+import { BowlMascot } from '@/src/components/mascot';
 import { completeOnboarding } from '@/src/services/settings-storage';
 import { theme } from '@/src/styles/theme';
 
@@ -40,7 +41,8 @@ export function OnboardingScreen() {
     <ScreenShell scroll={false} contentContainerStyle={styles.container}>
       {errorMessage ? <NoticeCard title="저장 실패" body={errorMessage} tone="error" /> : null}
       <View style={styles.hero}>
-        <Text style={styles.emoji}>{slide.emoji}</Text>
+        <BowlMascot size={112} />
+        <Text style={styles.slideEmoji}>{slide.emoji}</Text>
         <Text style={styles.title}>{slide.title}</Text>
         <Text style={styles.body}>{slide.body}</Text>
       </View>
@@ -69,8 +71,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  emoji: {
-    fontSize: 88,
+  slideEmoji: {
+    fontSize: 34,
   },
   title: {
     color: theme.colors.ink,

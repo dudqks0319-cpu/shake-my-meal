@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { categoryLabels, mealIntentLabels, priceTierLabels, type MealIntent, type MenuItem, type PartySize, type TimeTag } from '@/src/domain/menu-types';
 import { buildIntentRecommendationReason, buildRecommendationReason } from '@/src/domain/ui-copy';
 import { APP_CONFIG } from '@/src/config/app-config';
+import { BowlMascot } from '@/src/components/mascot';
 import { theme } from '@/src/styles/theme';
 
 export function ShareResultPoster({
@@ -39,7 +40,8 @@ export function ShareResultPoster({
     <View style={styles.poster}>
       <Text style={styles.brand}>🍚 흔들밥</Text>
       <Text style={styles.kicker}>오늘의 메뉴</Text>
-      <Text style={styles.emoji}>{menu.emoji}</Text>
+      <BowlMascot size={86} />
+      <Text style={styles.menuEmoji}>{menu.emoji}</Text>
       <Text style={styles.title}>{menu.name}</Text>
       <Text style={styles.reason}>{reasonText}</Text>
       <View style={styles.metaRow}>
@@ -82,8 +84,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  emoji: {
-    fontSize: 64,
+  menuEmoji: {
+    fontSize: 40,
     textAlign: 'center',
   },
   title: {

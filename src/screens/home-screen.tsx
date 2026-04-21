@@ -6,6 +6,7 @@ import { APP_CONFIG } from '@/src/config/app-config';
 import { HistoryList } from '@/src/components/history-list';
 import { IntensityMeter } from '@/src/components/intensity-meter';
 import { LoadingCard } from '@/src/components/loading-card';
+import { BowlMascot } from '@/src/components/mascot';
 import { NoticeCard } from '@/src/components/notice-card';
 import { PrimaryButton } from '@/src/components/primary-button';
 import { ScreenShell } from '@/src/components/screen-shell';
@@ -191,7 +192,7 @@ export function HomeScreen() {
         <View style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>{heroState.badge}</Text>
         </View>
-        <Text accessibilityElementsHidden style={styles.heroEmoji}>{heroState.emoji}</Text>
+        <BowlMascot size={110} />
         <Text accessibilityRole="header" style={styles.heroTitle}>{heroState.title}</Text>
         <Text style={styles.heroBody}>{heroState.body}</Text>
 
@@ -362,9 +363,6 @@ const styles = StyleSheet.create({
     color: theme.colors.bowlDeep,
     fontSize: theme.fontSize.caption,
     fontWeight: '800',
-  },
-  heroEmoji: {
-    fontSize: 86,
   },
   heroTitle: {
     color: theme.colors.ink,
